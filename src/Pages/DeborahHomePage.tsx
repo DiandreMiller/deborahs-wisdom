@@ -1,10 +1,50 @@
+const getEasternDateString = () => {
+    const parts = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).formatToParts(new Date());
+  
+    const year = parts.find((part) => part.type === 'year')?.value;
+    const month = parts.find((part) => part.type === 'month')?.value;
+    const day = parts.find((part) => part.type === 'day')?.value;
+  
+    return `${year}-${month}-${day}`;
+  };
+
 import { useNavigate } from 'react-router-dom';
 import Jesus from '../assets/JesusCrown.png';
+import { useEffect, useState } from 'react';
+import DailyVerseModal from '../components/DailyVerseModal';
+import { getVerseForWord, type Verse } from '../utils/getBibleVerse';
+
 
 const DeborahHomePage = () => {
+
+  const [showDailyVerseModal, setShowDailyVerseModal] = useState(false);
+  const [dailyVerse, setDailyVerse] = useState<Verse | null>(null);
+
+  const DAILY_VERSE_STORAGE_KEY = 'deborahs-wisdom-daily-verse-date-v1';
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const todayEastern = getEasternDateString();
+    const lastShownDate = localStorage.getItem(DAILY_VERSE_STORAGE_KEY);
+  
+    if (lastShownDate !== todayEastern) {
+      setDailyVerse(getVerseForWord('hope'));
+      setShowDailyVerseModal(true);
+      localStorage.setItem(DAILY_VERSE_STORAGE_KEY, todayEastern);
+    }
+  }, []);
+
+  const handleCloseDailyVerseModal = () => {
+    setShowDailyVerseModal(false);
+  };
+
   return (
+    
     <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_#fffef8_0%,_#fff7dc_18%,_#f7ebc7_38%,_#ebd5a0_62%,_#d5b06b_82%,_#be8f48_100%)] px-4 py-8 text-[#6f5317] sm:px-6 lg:px-8">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute left-1/2 top-0 h-[30rem] w-[30rem] -translate-x-1/2 rounded-full bg-white/50 blur-3xl" />
@@ -18,6 +58,12 @@ const DeborahHomePage = () => {
           <div className="rounded-full border border-white/80 bg-white/55 px-4 py-2 text-sm font-black uppercase tracking-[0.28em] text-[#8a651d] shadow-[0_10px_30px_rgba(190,143,72,0.15)] backdrop-blur-xl">
             Deborah’s Wisdom
           </div>
+
+          <DailyVerseModal
+            isOpen={showDailyVerseModal}
+            verse={dailyVerse}
+            onClose={handleCloseDailyVerseModal}
+          />
 
           <button
             onClick={() => navigate('/play')}

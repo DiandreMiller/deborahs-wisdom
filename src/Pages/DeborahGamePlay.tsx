@@ -168,12 +168,12 @@ const DeborahGamePage = () => {
               ×
             </button>
 
-            <h2
+            <p
               className="text-3xl font-black text-[#4a2f05]"
               style={{ fontFamily: 'Playfair Display, serif' }}
             >
               How to play
-            </h2>
+            </p>
 
             <p className="mt-3 text-base leading-7 text-[#7b632a]">
               Guess the hidden Bible word in six tries. Each guess must match the
