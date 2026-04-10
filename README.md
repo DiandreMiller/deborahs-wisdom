@@ -72,3 +72,4 @@ export default defineConfig([
 ])
 ```
 # deborah-wisdom
+# deborahs-wisdom
