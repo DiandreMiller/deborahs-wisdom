@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { BIBLE_WORDS } from '../data/bibleWords';
-import Jesus from '../assets/JesusCrown.png'
+import { PLAYABLE_BIBLE_WORDS } from '../data/playableBibleWords';
+import { getVerseForWord, type Verse } from '../utils/getBibleVerse';
+import Jesus from '../assets/JesusCrown.png';
 
 const MAX_GUESSES = 6;
 const HOW_TO_PLAY_STORAGE_KEY = 'deborahs-wisdom-hide-how-to-play-v1';
@@ -29,9 +30,10 @@ const DeborahGamePage = () => {
   );
   const [showHowToPlayModal, setShowHowToPlayModal] = useState<boolean>(false);
   const [stats, setStats] = useState<GameStats>(defaultStats);
+  const [verse, setVerse] = useState<Verse | null>(null);
 
   const generateNewWord = () => {
-    const validWords = BIBLE_WORDS.filter(
+    const validWords = PLAYABLE_BIBLE_WORDS.filter(
       (word) => word.length >= 4 && word.length <= 8
     );
 
@@ -63,6 +65,8 @@ const DeborahGamePage = () => {
     }
   }, []);
 
+  console.log('word:', word);
+
   const handleCloseHowToPlayModal = () => {
     setShowHowToPlayModal(false);
     localStorage.setItem(HOW_TO_PLAY_STORAGE_KEY, 'true');
@@ -92,15 +96,18 @@ const DeborahGamePage = () => {
       };
 
       saveStats(updatedStats);
+      setVerse(getVerseForWord(word));
       setStatus('win');
     } else if (newGuesses.length === MAX_GUESSES) {
       const updatedStats: GameStats = {
         ...stats,
         streak: 0,
         losses: stats.losses + 1,
+        longestStreak: stats.longestStreak,
       };
 
       saveStats(updatedStats);
+      setVerse(null);
       setStatus('loss');
     }
   };
@@ -110,6 +117,7 @@ const DeborahGamePage = () => {
     setWord(newWord);
     setGuesses([]);
     setCurrentGuess('');
+    setVerse(null);
     setStatus('playing');
   };
 
@@ -150,7 +158,7 @@ const DeborahGamePage = () => {
       </div>
 
       {showHowToPlayModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#9f7a2c]/20 backdrop-blur-sm px-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#9f7a2c]/20 px-4 backdrop-blur-sm">
           <div className="relative w-full max-w-2xl rounded-[2rem] border border-white/80 bg-white/60 p-6 shadow-[0_24px_80px_rgba(190,143,72,0.35)] backdrop-blur-2xl sm:p-8">
             <button
               onClick={handleCloseHowToPlayModal}
@@ -160,12 +168,12 @@ const DeborahGamePage = () => {
               ×
             </button>
 
-            <p
-              className="text-3xl font-black text-[#7d5a12]"
+            <h2
+              className="text-3xl font-black text-[#4a2f05]"
               style={{ fontFamily: 'Playfair Display, serif' }}
             >
               How to play
-            </p>
+            </h2>
 
             <p className="mt-3 text-base leading-7 text-[#7b632a]">
               Guess the hidden Bible word in six tries. Each guess must match the
@@ -213,34 +221,35 @@ const DeborahGamePage = () => {
 
       <div className="relative mx-auto max-w-6xl">
         <div className="mb-8 flex items-center justify-center gap-3">
-            <div className="relative inline-block">
-                {/* Crown */}
-                <img
-                src={Jesus}
-                alt="Crown"
-                className="absolute left-1/2 -translate-x-1/2 -top-8 w-20 sm:-top-4 sm:w-24"
-                />
+          <div className="relative inline-block">
+            <img
+              src={Jesus}
+              alt="Crown"
+              className="absolute left-1/2 -top-8 w-20 -translate-x-1/2 sm:-top-4 sm:w-24"
+            />
 
-                {/* Title */}
-                <h1
-                className="text-center text-5xl tracking-tight sm:text-6xl lg:text-7xl"
-                style={{
-                    fontFamily: 'Playfair Display, serif',
-                    color: '#4a2f05',
-                    fontWeight: 900,
-                }}
-                >
-                Deborah’s Wisdom
-                </h1>
-            </div>
-
-            <button
-                onClick={handleOpenHowToPlayModal}
-                className="mt-2 flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/70 text-lg font-black text-[#8a651d]"
+            <h1
+              className="text-center text-5xl tracking-tight sm:text-6xl lg:text-7xl"
+              style={{
+                fontFamily: 'Playfair Display, serif',
+                color: '#4a2f05',
+                fontWeight: 900,
+              }}
             >
-                ?
-            </button>
+              Deborah’s Wisdom
+            </h1>
+          </div>
+
+          <button
+            onClick={handleOpenHowToPlayModal}
+            className="mt-2 flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/70 text-lg font-black text-[#8a651d]"
+            aria-label="Open how to play modal"
+            title="How to play"
+          >
+            ?
+          </button>
         </div>
+
         <div className="grid items-start gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-10">
           <div className="rounded-[2.5rem] border border-white/80 bg-white/45 p-6 shadow-[0_24px_80px_rgba(190,143,72,0.3)] backdrop-blur-2xl sm:p-8">
             <div className="mb-5 flex flex-col gap-3">
@@ -340,6 +349,17 @@ const DeborahGamePage = () => {
                     Beautiful work. You guessed{' '}
                     <span className="font-black uppercase text-[#6a4d0f]">{word}</span>.
                   </p>
+
+                  {verse && (
+                    <div className="mt-5 rounded-[1.25rem] border border-white/80 bg-white/70 p-4 text-center shadow-[0_10px_24px_rgba(190,143,72,0.14)]">
+                      <p className="text-base italic leading-7 text-[#6a4d0f]">
+                        “{verse.text}”
+                      </p>
+                      <p className="mt-2 text-sm font-black uppercase tracking-[0.18em] text-[#b58521]">
+                        {verse.reference}
+                      </p>
+                    </div>
+                  )}
 
                   <button
                     onClick={handleNewGame}
