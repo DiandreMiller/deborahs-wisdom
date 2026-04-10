@@ -1,0 +1,452 @@
+import { useEffect, useState } from 'react';
+import { BIBLE_WORDS } from '../data/bibleWords';
+import Jesus from '../assets/JesusCrown.png'
+
+const MAX_GUESSES = 6;
+const HOW_TO_PLAY_STORAGE_KEY = 'deborahs-wisdom-hide-how-to-play-v1';
+const GAME_STATS_STORAGE_KEY = 'deborahs-wisdom-stats-v1';
+
+type GameStats = {
+  streak: number;
+  wins: number;
+  losses: number;
+  longestStreak: number;
+};
+
+const defaultStats: GameStats = {
+  streak: 0,
+  wins: 0,
+  losses: 0,
+  longestStreak: 0,
+};
+
+const DeborahGamePage = () => {
+  const [word, setWord] = useState<string>('');
+  const [guesses, setGuesses] = useState<string[]>([]);
+  const [currentGuess, setCurrentGuess] = useState<string>('');
+  const [status, setStatus] = useState<'loading' | 'playing' | 'win' | 'loss'>(
+    'loading'
+  );
+  const [showHowToPlayModal, setShowHowToPlayModal] = useState<boolean>(false);
+  const [stats, setStats] = useState<GameStats>(defaultStats);
+
+  const generateNewWord = () => {
+    const validWords = BIBLE_WORDS.filter(
+      (word) => word.length >= 4 && word.length <= 8
+    );
+
+    return validWords[Math.floor(Math.random() * validWords.length)];
+  };
+
+  const saveStats = (updatedStats: GameStats) => {
+    setStats(updatedStats);
+    localStorage.setItem(GAME_STATS_STORAGE_KEY, JSON.stringify(updatedStats));
+  };
+
+  useEffect(() => {
+    const generatedWord = generateNewWord();
+    setWord(generatedWord);
+    setStatus('playing');
+
+    const hasDismissedModal = localStorage.getItem(HOW_TO_PLAY_STORAGE_KEY);
+    if (!hasDismissedModal) {
+      setShowHowToPlayModal(true);
+    }
+
+    const savedStats = localStorage.getItem(GAME_STATS_STORAGE_KEY);
+    if (savedStats) {
+      try {
+        setStats(JSON.parse(savedStats));
+      } catch {
+        setStats(defaultStats);
+      }
+    }
+  }, []);
+
+  const handleCloseHowToPlayModal = () => {
+    setShowHowToPlayModal(false);
+    localStorage.setItem(HOW_TO_PLAY_STORAGE_KEY, 'true');
+  };
+
+  const handleOpenHowToPlayModal = () => {
+    setShowHowToPlayModal(true);
+  };
+
+  const handleSubmit = () => {
+    if (status !== 'playing') return;
+
+    const guess = currentGuess.toLowerCase().trim();
+
+    if (guess.length !== word.length) return;
+
+    const newGuesses = [...guesses, guess];
+    setGuesses(newGuesses);
+    setCurrentGuess('');
+
+    if (guess === word) {
+      const updatedStats: GameStats = {
+        ...stats,
+        streak: stats.streak + 1,
+        wins: stats.wins + 1,
+        longestStreak: Math.max(stats.longestStreak, stats.streak + 1),
+      };
+
+      saveStats(updatedStats);
+      setStatus('win');
+    } else if (newGuesses.length === MAX_GUESSES) {
+      const updatedStats: GameStats = {
+        ...stats,
+        streak: 0,
+        losses: stats.losses + 1,
+      };
+
+      saveStats(updatedStats);
+      setStatus('loss');
+    }
+  };
+
+  const handleNewGame = () => {
+    const newWord = generateNewWord();
+    setWord(newWord);
+    setGuesses([]);
+    setCurrentGuess('');
+    setStatus('playing');
+  };
+
+  const getColor = (letter: string, index: number) => {
+    if (word[index] === letter) {
+      return 'bg-emerald-500/85 border-emerald-300 text-white shadow-[0_0_18px_rgba(16,185,129,0.4)]';
+    }
+
+    if (word.includes(letter)) {
+      return 'bg-amber-300 border-amber-100 text-[#5c4300] shadow-[0_0_18px_rgba(251,191,36,0.35)]';
+    }
+
+    return 'bg-rose-300/85 border-rose-100 text-[#6b1d1d] shadow-[0_0_18px_rgba(244,114,182,0.25)]';
+  };
+
+  if (status === 'loading') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,_#fffdf3_0%,_#f6ebc8_35%,_#e8d19a_70%,_#caa35a_100%)] px-4">
+        <div className="rounded-[2rem] border border-white/70 bg-white/45 px-8 py-6 shadow-[0_20px_60px_rgba(214,175,78,0.28)] backdrop-blur-xl">
+          <p
+            className="text-2xl font-bold tracking-wide text-[#6b4d12]"
+            style={{ fontFamily: 'Playfair Display, serif' }}
+          >
+            Loading Deborah’s Wisdom...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#fffef8_0%,_#fff7dc_18%,_#f7ebc7_38%,_#ebd5a0_62%,_#d5b06b_82%,_#be8f48_100%)] px-4 py-8 text-[#6f5317] sm:py-10">
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute left-1/2 top-0 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-white/55 blur-3xl" />
+        <div className="absolute left-[10%] top-[18%] h-40 w-40 rounded-full bg-white/25 blur-3xl" />
+        <div className="absolute right-[8%] top-[24%] h-48 w-48 rounded-full bg-yellow-100/30 blur-3xl" />
+        <div className="absolute bottom-[10%] left-[20%] h-56 w-56 rounded-full bg-amber-100/25 blur-3xl" />
+      </div>
+
+      {showHowToPlayModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#9f7a2c]/20 backdrop-blur-sm px-4">
+          <div className="relative w-full max-w-2xl rounded-[2rem] border border-white/80 bg-white/60 p-6 shadow-[0_24px_80px_rgba(190,143,72,0.35)] backdrop-blur-2xl sm:p-8">
+            <button
+              onClick={handleCloseHowToPlayModal}
+              className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full border border-[#e9d197] bg-white/80 text-xl font-bold text-[#8a651d] transition hover:scale-105 hover:bg-[#fff7dc]"
+              aria-label="Close how to play modal"
+            >
+              ×
+            </button>
+
+            <p
+              className="text-3xl font-black text-[#7d5a12]"
+              style={{ fontFamily: 'Playfair Display, serif' }}
+            >
+              How to play
+            </p>
+
+            <p className="mt-3 text-base leading-7 text-[#7b632a]">
+              Guess the hidden Bible word in six tries. Each guess must match the
+              length of the word shown for that round.
+            </p>
+
+            <div className="mt-6 space-y-4 text-[#6f5b2b]">
+              <div className="flex items-start gap-3 rounded-[1.25rem] border border-white/70 bg-white/55 p-4">
+                <div className="mt-1 h-5 w-5 rounded-full border border-emerald-200 bg-emerald-400" />
+                <p>
+                  <span className="font-bold text-[#6a4d0f]">Green</span> means the
+                  letter is correct and in the right place.
+                </p>
+              </div>
+
+              <div className="flex items-start gap-3 rounded-[1.25rem] border border-white/70 bg-white/55 p-4">
+                <div className="mt-1 h-5 w-5 rounded-full border border-amber-100 bg-amber-300" />
+                <p>
+                  <span className="font-bold text-[#6a4d0f]">Yellow</span> means the
+                  letter is in the word, but in the wrong place.
+                </p>
+              </div>
+
+              <div className="flex items-start gap-3 rounded-[1.25rem] border border-white/70 bg-white/55 p-4">
+                <div className="mt-1 h-5 w-5 rounded-full border border-rose-100 bg-rose-300" />
+                <p>
+                  <span className="font-bold text-[#6a4d0f]">Red</span> means the
+                  letter is not in the word.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-[1.5rem] border border-white/80 bg-[#fff9e8]/80 p-5">
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#b58521]">
+                Tip
+              </p>
+              <p className="mt-2 leading-7 text-[#75602d]">
+                Start with meaningful words and use the color clues to narrow the
+                answer down.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="relative mx-auto max-w-6xl">
+        <div className="mb-8 flex items-center justify-center gap-3">
+            <div className="relative inline-block">
+                {/* Crown */}
+                <img
+                src={Jesus}
+                alt="Crown"
+                className="absolute left-1/2 -translate-x-1/2 -top-8 w-20 sm:-top-4 sm:w-24"
+                />
+
+                {/* Title */}
+                <h1
+                className="text-center text-5xl tracking-tight sm:text-6xl lg:text-7xl"
+                style={{
+                    fontFamily: 'Playfair Display, serif',
+                    color: '#4a2f05',
+                    fontWeight: 900,
+                }}
+                >
+                Deborah’s Wisdom
+                </h1>
+            </div>
+
+            <button
+                onClick={handleOpenHowToPlayModal}
+                className="mt-2 flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/70 text-lg font-black text-[#8a651d]"
+            >
+                ?
+            </button>
+        </div>
+        <div className="grid items-start gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-10">
+          <div className="rounded-[2.5rem] border border-white/80 bg-white/45 p-6 shadow-[0_24px_80px_rgba(190,143,72,0.3)] backdrop-blur-2xl sm:p-8">
+            <div className="mb-5 flex flex-col gap-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#b58521] sm:text-sm">
+                Bible Word Game
+              </p>
+
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex-1">
+                  <p className="max-w-xl text-base leading-7 text-[#755f2f] sm:text-lg">
+                    Guess the hidden Bible word in six tries. Every round gives you a
+                    new word between 4 and 8 letters.
+                  </p>
+                </div>
+
+                <div className="self-start rounded-[1.5rem] border border-white/80 bg-[#fff9e8]/90 px-5 py-4 text-center shadow-[0_12px_28px_rgba(190,143,72,0.18)] sm:self-auto">
+                  <p className="text-xs uppercase tracking-[0.25em] text-[#b58521]">
+                    Word Length
+                  </p>
+                  <p className="mt-1 text-3xl font-black text-[#7c5914]">
+                    {word.length}
+                  </p>
+                </div>
+              </div>
+
+              <div className="border-b border-[#e8d39f]/80" />
+            </div>
+
+            <div className="flex flex-col items-center">
+              <div className="space-y-3 pt-2">
+                {Array.from({ length: MAX_GUESSES }).map((_, rowIndex) => {
+                  const guess = guesses[rowIndex] || '';
+
+                  return (
+                    <div key={rowIndex} className="flex justify-center gap-2 sm:gap-3">
+                      {Array.from({ length: word.length }).map((_, colIndex) => {
+                        const letter = guess[colIndex] || '';
+                        const color = guess
+                          ? getColor(letter, colIndex)
+                          : 'bg-white/65 border-white/90 text-[#8a651d] shadow-[0_10px_20px_rgba(190,143,72,0.12)]';
+
+                        return (
+                          <div
+                            key={colIndex}
+                            className={`flex h-14 w-14 items-center justify-center rounded-[1rem] border-2 text-xl font-black uppercase transition-all duration-200 sm:h-16 sm:w-16 sm:text-2xl ${color}`}
+                          >
+                            {letter}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {status === 'playing' && (
+                <div className="mt-8 w-full max-w-xl">
+                  <label
+                    htmlFor="guess"
+                    className="mb-3 block text-sm font-semibold uppercase tracking-[0.2em] text-[#b58521]"
+                  >
+                    Enter your guess
+                  </label>
+
+                  <div className="flex flex-col gap-3 sm:flex-row">
+                    <input
+                      id="guess"
+                      value={currentGuess}
+                      onChange={(e) =>
+                        setCurrentGuess(
+                          e.target.value.toLowerCase().slice(0, word.length)
+                        )
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          handleSubmit();
+                        }
+                      }}
+                      maxLength={word.length}
+                      className="h-14 flex-1 rounded-[1.25rem] border border-white/90 bg-white/85 px-5 text-lg font-semibold text-[#5f4511] outline-none transition placeholder:text-[#a9873a] focus:border-[#e3c56e] focus:ring-4 focus:ring-[#f4e4af]/70"
+                      placeholder={`Enter ${word.length}-letter word`}
+                    />
+                    <button
+                      onClick={handleSubmit}
+                      className="h-14 rounded-[1.25rem] border border-[#f3df9a] bg-gradient-to-b from-[#fff2c4] to-[#eac86f] px-8 text-lg font-black text-[#6e4e11] shadow-[0_12px_24px_rgba(190,143,72,0.24)] transition hover:scale-[1.02] hover:from-[#fff6d6] hover:to-[#edcf81] active:scale-[0.98]"
+                    >
+                      Guess
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {status === 'win' && (
+                <div className="mt-8 w-full max-w-xl rounded-[1.75rem] border border-emerald-200 bg-white/65 px-6 py-5 text-center shadow-[0_20px_40px_rgba(16,185,129,0.14)]">
+                  <p className="text-3xl font-black text-emerald-700">You won!</p>
+                  <p className="mt-2 text-base text-[#755f2f]">
+                    Beautiful work. You guessed{' '}
+                    <span className="font-black uppercase text-[#6a4d0f]">{word}</span>.
+                  </p>
+
+                  <button
+                    onClick={handleNewGame}
+                    className="mt-5 h-12 rounded-[1.25rem] border border-emerald-200 bg-emerald-500 px-6 text-lg font-black text-white shadow-[0_12px_24px_rgba(16,185,129,0.22)] transition hover:scale-105 hover:bg-emerald-600"
+                  >
+                    Play Again
+                  </button>
+                </div>
+              )}
+
+              {status === 'loss' && (
+                <div className="mt-8 w-full max-w-xl rounded-[1.75rem] border border-rose-100 bg-white/65 px-6 py-5 text-center shadow-[0_20px_40px_rgba(244,114,182,0.12)]">
+                  <p className="text-3xl font-black text-rose-700">You lost</p>
+                  <p className="mt-2 text-base text-[#755f2f]">
+                    The word was{' '}
+                    <span className="font-black uppercase text-[#6a4d0f]">{word}</span>.
+                  </p>
+
+                  <button
+                    onClick={handleNewGame}
+                    className="mt-5 h-12 rounded-[1.25rem] border border-rose-100 bg-rose-300 px-6 text-lg font-black text-[#6b1d1d] shadow-[0_12px_24px_rgba(244,114,182,0.18)] transition hover:scale-105 hover:bg-rose-400"
+                  >
+                    Try Another Word
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-6">
+            <div className="overflow-hidden rounded-[2.5rem] border border-white/80 bg-white/45 shadow-[0_24px_80px_rgba(190,143,72,0.28)] backdrop-blur-2xl">
+              <div className="flex h-[520px] items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.95)_0%,_rgba(255,247,220,0.92)_35%,_rgba(242,224,171,0.78)_70%,_rgba(224,189,113,0.62)_100%)] p-8 text-center">
+                <div>
+                  <div className="mx-auto mb-6 h-24 w-24 rounded-full bg-white/70 shadow-[0_0_60px_rgba(255,255,255,0.95)]" />
+                  <p
+                    className="text-4xl font-black text-[#7c5914] sm:text-5xl"
+                    style={{ fontFamily: 'Playfair Display, serif' }}
+                  >
+                    Deborah’s Wisdom
+                  </p>
+                  <p className="mt-4 text-base leading-7 text-[#7b632a]">
+                    A Bible word game made with love.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] border border-white/80 bg-white/45 p-6 shadow-[0_16px_40px_rgba(190,143,72,0.22)] backdrop-blur-2xl">
+              <h2
+                className="text-2xl font-black text-[#7c5914]"
+                style={{ fontFamily: 'Playfair Display, serif' }}
+              >
+                Your Streaks
+              </h2>
+
+              <div className="mt-5 grid grid-cols-2 gap-4">
+                <div className="rounded-[1.25rem] border border-white/80 bg-white/60 p-4 text-center">
+                  <p className="text-xs uppercase tracking-[0.25em] text-[#b58521]">
+                    Current Streak
+                  </p>
+                  <p className="mt-2 text-3xl font-black text-[#7c5914]">
+                    {stats.streak}
+                  </p>
+                </div>
+
+                <div className="rounded-[1.25rem] border border-white/80 bg-white/60 p-4 text-center">
+                  <p className="text-xs uppercase tracking-[0.25em] text-[#b58521]">
+                    Longest Streak
+                  </p>
+                  <p className="mt-2 text-3xl font-black text-[#7c5914]">
+                    {stats.longestStreak}
+                  </p>
+                </div>
+
+                <div className="rounded-[1.25rem] border border-white/80 bg-white/60 p-4 text-center">
+                  <p className="text-xs uppercase tracking-[0.25em] text-[#b58521]">
+                    Wins
+                  </p>
+                  <p className="mt-2 text-3xl font-black text-[#7c5914]">
+                    {stats.wins}
+                  </p>
+                </div>
+
+                <div className="rounded-[1.25rem] border border-white/80 bg-white/60 p-4 text-center">
+                  <p className="text-xs uppercase tracking-[0.25em] text-[#b58521]">
+                    Losses
+                  </p>
+                  <p className="mt-2 text-3xl font-black text-[#7c5914]">
+                    {stats.losses}
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-6 rounded-[1.5rem] border border-white/80 bg-[#fff9e8]/80 p-5">
+                <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#b58521]">
+                  Keep Going
+                </p>
+                <p className="mt-2 leading-7 text-[#75602d]">
+                  Build your streak, beat your best run, and keep stacking wins.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default DeborahGamePage;
