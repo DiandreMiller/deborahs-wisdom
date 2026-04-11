@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { PLAYABLE_BIBLE_WORDS } from '../data/playableBibleWords';
 import { getVerseForWord, type Verse } from '../utils/getBibleVerse';
+import MusicPlayer from '../components/MusicPlayer';
 import Jesus from '../assets/JesusCrown.png';
+
 
 const MAX_GUESSES = 6;
 const HOW_TO_PLAY_STORAGE_KEY = 'deborahs-wisdom-hide-how-to-play-v1';
@@ -66,6 +68,7 @@ const DeborahGamePage = () => {
   }, []);
 
   console.log('word:', word);
+
 
   const handleCloseHowToPlayModal = () => {
     setShowHowToPlayModal(false);
@@ -463,6 +466,9 @@ const DeborahGamePage = () => {
               </div>
             </div>
           </div>
+        </div>
+        <div className="mt-8 flex justify-center">
+            <MusicPlayer />
         </div>
       </div>
     </div>
