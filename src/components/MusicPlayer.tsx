@@ -5,8 +5,14 @@ import song1 from '../assets/audio/JazzHopMusic.mp3';
 import song2 from '../assets/audio/PurposebyJonnyEaston.mp3';
 import song3 from '../assets/audio/lightsByAlexProductions.mp3';
 import song4 from '../assets/audio/wayHome.mp3';
+import song5 from '../assets/audio/FilamentsByScottBuckley.mp3';
+import song6 from '../assets/audio/SnowfallByScottBuckley.mp3';
+import song7 from '../assets/audio/JazzInParis.mp3';
+import song8 from '../assets/audio/GetOutsideJasonFarnham.mp3';
+import song9 from '../assets/audio/MorningStrollJoshKirsch.mp3';
+import song10 from '../assets/audio/MorningMoodGrieg.mp3'
 
-const PLAYLIST = [song1, song2, song3, song4];
+const PLAYLIST = [song1, song2, song3, song4, song5, song6, song7, song8, song9, song10];
 const MUSIC_ENABLED_STORAGE_KEY = 'deborahs-wisdom-music-enabled-v1';
 const MUSIC_TRACK_INDEX_STORAGE_KEY = 'deborahs-wisdom-music-track-index-v1';
 
@@ -54,7 +60,6 @@ const MusicPlayer = () => {
 
     if (musicEnabled) {
       audio.play().catch(() => {
-        // autoplay may be blocked until user interacts with the page
       });
     }
   }, [currentTrackIndex, musicEnabled]);
