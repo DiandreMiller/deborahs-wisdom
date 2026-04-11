@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import Jesus from '../assets/JesusCrown.png';
+import Jesus from '../assets/images/JesusCrown.png';
 
 const FOUROFOUR = () => {
   const navigate = useNavigate();

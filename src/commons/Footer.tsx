@@ -1,4 +1,4 @@
-import crownedLegacy from '../assets/crownedLegacy.png';
+import crownedLegacy from '../assets/images/crownedLegacy.png';
 import {  ArrowUp } from 'lucide-react';
 
 const Footer = () => {
