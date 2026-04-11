@@ -5,7 +5,6 @@ import MusicPlayer from '../components/MusicPlayer';
 import Jesus from '../assets/JesusCrown.png';
 import Logo from '../assets/Logo.png';
 
-
 const MAX_GUESSES = 6;
 const HOW_TO_PLAY_STORAGE_KEY = 'deborahs-wisdom-hide-how-to-play-v1';
 const GAME_STATS_STORAGE_KEY = 'deborahs-wisdom-stats-v1';
@@ -67,9 +66,6 @@ const DeborahGamePage = () => {
       }
     }
   }, []);
-
-  console.log('word:', word);
-
 
   const handleCloseHowToPlayModal = () => {
     setShowHowToPlayModal(false);
@@ -394,93 +390,92 @@ const DeborahGamePage = () => {
           </div>
 
           <div className="flex flex-col gap-6">
-            <div className="overflow-hidden rounded-[2.5rem] border border-white/80 bg-white/45 shadow-[0_24px_80px_rgba(190,143,72,0.28)] backdrop-blur-2xl">
+            <div className="hidden overflow-hidden rounded-[2.5rem] border border-white/80 bg-white/45 shadow-[0_24px_80px_rgba(190,143,72,0.28)] backdrop-blur-2xl lg:block">
               <div className="flex h-[520px] items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.95)_0%,_rgba(255,247,220,0.92)_35%,_rgba(242,224,171,0.78)_70%,_rgba(224,189,113,0.62)_100%)] p-8 text-center">
                 <div>
-                    <div className="relative mx-auto mb-6 flex h-40 w-40 items-center justify-center sm:h-48 sm:w-48">
-                        <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,_rgba(255,255,255,0.98)_0%,_rgba(255,244,200,0.9)_35%,_rgba(234,200,111,0.45)_65%,_rgba(234,200,111,0)_100%)] blur-md" />
+                  <div className="relative mx-auto mb-6 flex h-40 w-40 items-center justify-center sm:h-48 sm:w-48">
+                    <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,_rgba(255,255,255,0.98)_0%,_rgba(255,244,200,0.9)_35%,_rgba(234,200,111,0.45)_65%,_rgba(234,200,111,0)_100%)] blur-md" />
+                    <div className="absolute inset-4 rounded-full bg-white/35 blur-2xl" />
+                    <img
+                      src={Logo}
+                      alt="Deborah’s Wisdom logo"
+                      className="relative z-10 max-h-28 max-w-28 object-contain drop-shadow-[0_10px_25px_rgba(140,101,29,0.35)] sm:max-h-36 sm:max-w-36"
+                    />
+                  </div>
 
-                        <div className="absolute inset-4 rounded-full bg-white/35 blur-2xl" />
-
-                        <img
-                        src={Logo}
-                        alt="Deborah’s Wisdom logo"
-                        className="relative z-10 max-h-28 max-w-28 object-contain drop-shadow-[0_10px_25px_rgba(140,101,29,0.35)] sm:max-h-36 sm:max-w-36"
-                        />
-                    </div>
-
-                    <p
-                        className="text-4xl font-black text-[#7c5914] sm:text-5xl"
-                        style={{ fontFamily: 'Playfair Display, serif' }}
-                    >
-                        Deborah’s Wisdom
-                    </p>
-                    <p className="mt-4 text-base leading-7 text-[#7b632a]">
-                        A Bible word game made with love.
-                    </p>
+                  <p
+                    className="text-4xl font-black text-[#7c5914] sm:text-5xl"
+                    style={{ fontFamily: 'Playfair Display, serif' }}
+                  >
+                    Deborah’s Wisdom
+                  </p>
+                  <p className="mt-4 text-base leading-7 text-[#7b632a]">
+                    A Bible word game made with love.
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-[2rem] border border-white/80 bg-white/45 p-6 shadow-[0_16px_40px_rgba(190,143,72,0.22)] backdrop-blur-2xl">
+            <div className="rounded-[1.5rem] border border-white/80 bg-white/45 p-4 shadow-[0_16px_40px_rgba(190,143,72,0.22)] backdrop-blur-2xl sm:rounded-[2rem] sm:p-6">
               <h2
-                className="text-2xl font-black text-[#7c5914]"
+                className="text-xl font-black text-[#7c5914] sm:text-2xl"
                 style={{ fontFamily: 'Playfair Display, serif' }}
               >
                 Your Streaks
               </h2>
 
-              <div className="mt-5 grid grid-cols-2 gap-4">
-                <div className="rounded-[1.25rem] border border-white/80 bg-white/60 p-4 text-center">
-                  <p className="text-xs uppercase tracking-[0.25em] text-[#b58521]">
+              <div className="mt-4 grid grid-cols-2 gap-3 sm:mt-5 sm:gap-4">
+                <div className="rounded-[1rem] border border-white/80 bg-white/60 p-3 text-center sm:rounded-[1.25rem] sm:p-4">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-[#b58521] sm:text-xs sm:tracking-[0.25em]">
                     Current Streak
                   </p>
-                  <p className="mt-2 text-3xl font-black text-[#7c5914]">
+                  <p className="mt-1 text-2xl font-black text-[#7c5914] sm:mt-2 sm:text-3xl">
                     {stats.streak}
                   </p>
                 </div>
 
-                <div className="rounded-[1.25rem] border border-white/80 bg-white/60 p-4 text-center">
-                  <p className="text-xs uppercase tracking-[0.25em] text-[#b58521]">
+                <div className="rounded-[1rem] border border-white/80 bg-white/60 p-3 text-center sm:rounded-[1.25rem] sm:p-4">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-[#b58521] sm:text-xs sm:tracking-[0.25em]">
                     Longest Streak
                   </p>
-                  <p className="mt-2 text-3xl font-black text-[#7c5914]">
+                  <p className="mt-1 text-2xl font-black text-[#7c5914] sm:mt-2 sm:text-3xl">
                     {stats.longestStreak}
                   </p>
                 </div>
 
-                <div className="rounded-[1.25rem] border border-white/80 bg-white/60 p-4 text-center">
-                  <p className="text-xs uppercase tracking-[0.25em] text-[#b58521]">
+                <div className="rounded-[1rem] border border-white/80 bg-white/60 p-3 text-center sm:rounded-[1.25rem] sm:p-4">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-[#b58521] sm:text-xs sm:tracking-[0.25em]">
                     Wins
                   </p>
-                  <p className="mt-2 text-3xl font-black text-[#7c5914]">
+                  <p className="mt-1 text-2xl font-black text-[#7c5914] sm:mt-2 sm:text-3xl">
                     {stats.wins}
                   </p>
                 </div>
 
-                <div className="rounded-[1.25rem] border border-white/80 bg-white/60 p-4 text-center">
-                  <p className="text-xs uppercase tracking-[0.25em] text-[#b58521]">
+                <div className="rounded-[1rem] border border-white/80 bg-white/60 p-3 text-center sm:rounded-[1.25rem] sm:p-4">
+                  <p className="text-[10px] uppercase tracking-[0.18em] text-[#b58521] sm:text-xs sm:tracking-[0.25em]">
                     Losses
                   </p>
-                  <p className="mt-2 text-3xl font-black text-[#7c5914]">
+                  <p className="mt-1 text-2xl font-black text-[#7c5914] sm:mt-2 sm:text-3xl">
                     {stats.losses}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-6 rounded-[1.5rem] border border-white/80 bg-[#fff9e8]/80 p-5">
+              <div className="mt-4 rounded-[1.25rem] border border-white/80 bg-[#fff9e8]/80 p-4 sm:mt-6 sm:rounded-[1.5rem] sm:p-5">
                 <p className="text-xs font-semibold uppercase tracking-[0.3em] text-[#b58521]">
                   Keep Going
                 </p>
-                <p className="mt-2 leading-7 text-[#75602d]">
+                <p className="mt-2 text-sm leading-6 text-[#75602d] sm:text-base sm:leading-7">
                   Build your streak, beat your best run, and keep stacking wins.
                 </p>
               </div>
             </div>
           </div>
         </div>
+
         <div className="mt-8 flex justify-center">
-            <MusicPlayer />
+          <MusicPlayer />
         </div>
       </div>
     </div>
