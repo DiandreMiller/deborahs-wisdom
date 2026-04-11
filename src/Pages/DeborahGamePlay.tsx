@@ -3,6 +3,7 @@ import { PLAYABLE_BIBLE_WORDS } from '../data/playableBibleWords';
 import { getVerseForWord, type Verse } from '../utils/getBibleVerse';
 import MusicPlayer from '../components/MusicPlayer';
 import Jesus from '../assets/JesusCrown.png';
+import Logo from '../assets/Logo.png';
 
 
 const MAX_GUESSES = 6;
@@ -396,16 +397,27 @@ const DeborahGamePage = () => {
             <div className="overflow-hidden rounded-[2.5rem] border border-white/80 bg-white/45 shadow-[0_24px_80px_rgba(190,143,72,0.28)] backdrop-blur-2xl">
               <div className="flex h-[520px] items-center justify-center bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.95)_0%,_rgba(255,247,220,0.92)_35%,_rgba(242,224,171,0.78)_70%,_rgba(224,189,113,0.62)_100%)] p-8 text-center">
                 <div>
-                  <div className="mx-auto mb-6 h-24 w-24 rounded-full bg-white/70 shadow-[0_0_60px_rgba(255,255,255,0.95)]" />
-                  <p
-                    className="text-4xl font-black text-[#7c5914] sm:text-5xl"
-                    style={{ fontFamily: 'Playfair Display, serif' }}
-                  >
-                    Deborah’s Wisdom
-                  </p>
-                  <p className="mt-4 text-base leading-7 text-[#7b632a]">
-                    A Bible word game made with love.
-                  </p>
+                    <div className="relative mx-auto mb-6 flex h-40 w-40 items-center justify-center sm:h-48 sm:w-48">
+                        <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle,_rgba(255,255,255,0.98)_0%,_rgba(255,244,200,0.9)_35%,_rgba(234,200,111,0.45)_65%,_rgba(234,200,111,0)_100%)] blur-md" />
+
+                        <div className="absolute inset-4 rounded-full bg-white/35 blur-2xl" />
+
+                        <img
+                        src={Logo}
+                        alt="Deborah’s Wisdom logo"
+                        className="relative z-10 max-h-28 max-w-28 object-contain drop-shadow-[0_10px_25px_rgba(140,101,29,0.35)] sm:max-h-36 sm:max-w-36"
+                        />
+                    </div>
+
+                    <p
+                        className="text-4xl font-black text-[#7c5914] sm:text-5xl"
+                        style={{ fontFamily: 'Playfair Display, serif' }}
+                    >
+                        Deborah’s Wisdom
+                    </p>
+                    <p className="mt-4 text-base leading-7 text-[#7b632a]">
+                        A Bible word game made with love.
+                    </p>
                 </div>
               </div>
             </div>
