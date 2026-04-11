@@ -14,7 +14,7 @@ const getEasternDateString = () => {
   };
 
 import { useNavigate } from 'react-router-dom';
-import Jesus from '../assets/JesusCrown.png';
+import Jesus from '../assets/images/JesusCrown.png';
 import { useEffect, useState } from 'react';
 import DailyVerseModal from '../components/DailyVerseModal';
 import { getVerseForWord, type Verse } from '../utils/getBibleVerse';
