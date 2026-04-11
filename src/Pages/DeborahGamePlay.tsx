@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PLAYABLE_BIBLE_WORDS } from '../data/playableBibleWords';
 import { getVerseForWord, type Verse } from '../utils/getBibleVerse';
 import MusicPlayer from '../components/MusicPlayer';
@@ -16,6 +16,8 @@ type GameStats = {
   longestStreak: number;
 };
 
+type LetterStatus = 'correct' | 'present' | 'absent';
+
 const defaultStats: GameStats = {
   streak: 0,
   wins: 0,
@@ -26,17 +28,20 @@ const defaultStats: GameStats = {
 const DeborahGamePage = () => {
   const [word, setWord] = useState<string>('');
   const [guesses, setGuesses] = useState<string[]>([]);
-  const [currentGuess, setCurrentGuess] = useState<string>('');
-  const [status, setStatus] = useState<'loading' | 'playing' | 'win' | 'loss'>(
-    'loading'
-  );
+  const [currentGuess, setCurrentGuess] = useState<string[]>([]);
+  const [currentRow, setCurrentRow] = useState<number>(0);
+  const [lockedLetters, setLockedLetters] = useState<Record<number, string>>({});
+  const [status, setStatus] = useState<'loading' | 'playing' | 'win' | 'loss'>('loading');
+  const [statuses, setStatuses] = useState<LetterStatus[][]>([]);
   const [showHowToPlayModal, setShowHowToPlayModal] = useState<boolean>(false);
   const [stats, setStats] = useState<GameStats>(defaultStats);
   const [verse, setVerse] = useState<Verse | null>(null);
 
+  const boardRef = useRef<HTMLDivElement | null>(null);
+
   const generateNewWord = () => {
     const validWords = PLAYABLE_BIBLE_WORDS.filter(
-      (word) => word.length >= 4 && word.length <= 8
+      (playableWord) => playableWord.length >= 4 && playableWord.length <= 8
     );
 
     return validWords[Math.floor(Math.random() * validWords.length)];
@@ -51,6 +56,10 @@ const DeborahGamePage = () => {
     const generatedWord = generateNewWord();
     setWord(generatedWord);
     setStatus('playing');
+    setLockedLetters({});
+    setCurrentRow(0);
+    setCurrentGuess(Array(generatedWord.length).fill(''));
+    setStatuses([]);
 
     const hasDismissedModal = localStorage.getItem(HOW_TO_PLAY_STORAGE_KEY);
     if (!hasDismissedModal) {
@@ -67,25 +76,80 @@ const DeborahGamePage = () => {
     }
   }, []);
 
+  console.log('word:', word);
+  useEffect(() => {
+    if (status === 'playing' && !showHowToPlayModal) {
+      boardRef.current?.focus();
+    }
+  }, [status, showHowToPlayModal, currentRow]);
+
   const handleCloseHowToPlayModal = () => {
     setShowHowToPlayModal(false);
     localStorage.setItem(HOW_TO_PLAY_STORAGE_KEY, 'true');
+    setTimeout(() => boardRef.current?.focus(), 0);
   };
 
   const handleOpenHowToPlayModal = () => {
     setShowHowToPlayModal(true);
   };
 
+  const evaluateGuess = (guess: string): LetterStatus[] => {
+    const result: LetterStatus[] = Array(guess.length).fill('absent');
+    const wordArr = word.split('');
+    const used = Array(word.length).fill(false);
+  
+    // pass 1: exact matches
+    for (let i = 0; i < guess.length; i++) {
+      if (guess[i] === wordArr[i]) {
+        result[i] = 'correct';
+        used[i] = true;
+      }
+    }
+  
+    // pass 2: present elsewhere
+    for (let i = 0; i < guess.length; i++) {
+      if (result[i] === 'correct') continue;
+  
+      for (let j = 0; j < wordArr.length; j++) {
+        if (!used[j] && guess[i] === wordArr[j]) {
+          result[i] = 'present';
+          used[j] = true;
+          break;
+        }
+      }
+    }
+  
+    return result;
+  };
+
   const handleSubmit = () => {
     if (status !== 'playing') return;
 
-    const guess = currentGuess.toLowerCase().trim();
+    const guess = currentGuess.join('');
 
     if (guess.length !== word.length) return;
 
+    for (const [index, lockedLetter] of Object.entries(lockedLetters)) {
+      if (guess[Number(index)] !== lockedLetter) {
+        return;
+      }
+    }
+
     const newGuesses = [...guesses, guess];
+    const result = evaluateGuess(guess);
+
     setGuesses(newGuesses);
-    setCurrentGuess('');
+    setStatuses((prev) => [...prev, result]);
+
+    const newLockedLetters = { ...lockedLetters };
+
+    result.forEach((status, i) => {
+    if (status === 'correct') {
+        newLockedLetters[i] = guess[i];
+    }
+    });
+
+    setLockedLetters(newLockedLetters);
 
     if (guess === word) {
       const updatedStats: GameStats = {
@@ -98,7 +162,11 @@ const DeborahGamePage = () => {
       saveStats(updatedStats);
       setVerse(getVerseForWord(word));
       setStatus('win');
-    } else if (newGuesses.length === MAX_GUESSES) {
+      setCurrentGuess(Array(word.length).fill(''));
+      return;
+    }
+
+    if (newGuesses.length === MAX_GUESSES) {
       const updatedStats: GameStats = {
         ...stats,
         streak: 0,
@@ -109,28 +177,92 @@ const DeborahGamePage = () => {
       saveStats(updatedStats);
       setVerse(null);
       setStatus('loss');
+      setCurrentGuess(Array(word.length).fill(''));
+      return;
     }
+
+    const nextGuessArray = Array(word.length).fill('');
+
+    Object.entries(newLockedLetters).forEach(([index, letter]) => {
+      nextGuessArray[Number(index)] = letter;
+    });
+
+    setCurrentGuess(nextGuessArray);
+    setCurrentRow(newGuesses.length);
   };
 
   const handleNewGame = () => {
     const newWord = generateNewWord();
     setWord(newWord);
     setGuesses([]);
-    setCurrentGuess('');
+    setCurrentGuess(Array(newWord.length).fill(''));
     setVerse(null);
+    setLockedLetters({});
+    setCurrentRow(0);
     setStatus('playing');
+    setTimeout(() => boardRef.current?.focus(), 0);
+    setStatuses([]);
   };
 
-  const getColor = (letter: string, index: number) => {
-    if (word[index] === letter) {
+  const handleBoardKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (status !== 'playing') return;
+
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSubmit();
+      return;
+    }
+
+    if (e.key === 'Backspace') {
+      e.preventDefault();
+
+      const chars = [...currentGuess];
+
+      for (let i = word.length - 1; i >= 0; i--) {
+        if (!(i in lockedLetters) && chars[i]) {
+          chars[i] = '';
+          setCurrentGuess(chars);
+          return;
+        }
+      }
+
+      return;
+    }
+
+    if (/^[a-zA-Z]$/.test(e.key)) {
+      e.preventDefault();
+
+      const chars = [...currentGuess];
+      while (chars.length < word.length) {
+        chars.push('');
+      }
+
+      for (let i = 0; i < word.length; i++) {
+        if (!(i in lockedLetters) && !chars[i]) {
+          chars[i] = e.key.toLowerCase();
+          setCurrentGuess(chars);
+          return;
+        }
+      }
+    }
+  };
+
+  const getColor = (index: number, rowIndex: number) => {
+    const letterStatus = statuses[rowIndex]?.[index];
+  
+    if (letterStatus === 'correct') {
       return 'bg-emerald-500/85 border-emerald-300 text-white shadow-[0_0_18px_rgba(16,185,129,0.4)]';
     }
-
-    if (word.includes(letter)) {
+  
+    if (letterStatus === 'present') {
       return 'bg-amber-300 border-amber-100 text-[#5c4300] shadow-[0_0_18px_rgba(251,191,36,0.35)]';
     }
-
-    return 'bg-rose-300/85 border-rose-100 text-[#6b1d1d] shadow-[0_0_18px_rgba(244,114,182,0.25)]';
+  
+    if (letterStatus === 'absent') {
+      return 'bg-rose-300/85 border-rose-100 text-[#6b1d1d] shadow-[0_0_18px_rgba(244,114,182,0.25)]';
+    }
+  
+    return 'bg-white/65 border-white/90 text-[#8a651d] shadow-[0_10px_20px_rgba(190,143,72,0.12)]';
   };
 
   if (status === 'loading') {
@@ -176,8 +308,8 @@ const DeborahGamePage = () => {
             </p>
 
             <p className="mt-3 text-base leading-7 text-[#7b632a]">
-              Guess the hidden Bible word in six tries. Each guess must match the
-              length of the word shown for that round.
+              Guess the hidden Bible word in six tries. Type directly into the board.
+              Green letters stay locked in place for the next guess.
             </p>
 
             <div className="mt-6 space-y-4 text-[#6f5b2b]">
@@ -211,8 +343,7 @@ const DeborahGamePage = () => {
                 Tip
               </p>
               <p className="mt-2 leading-7 text-[#75602d]">
-                Start with meaningful words and use the color clues to narrow the
-                answer down.
+                Click the board, type your guess, and press Enter to submit.
               </p>
             </div>
           </div>
@@ -278,19 +409,33 @@ const DeborahGamePage = () => {
               <div className="border-b border-[#e8d39f]/80" />
             </div>
 
-            <div className="flex flex-col items-center">
+            <div
+              ref={boardRef}
+              tabIndex={0}
+              onKeyDown={handleBoardKeyDown}
+              className="flex flex-col items-center outline-none"
+            >
               <div className="space-y-3 pt-2">
                 {Array.from({ length: MAX_GUESSES }).map((_, rowIndex) => {
-                  const guess = guesses[rowIndex] || '';
+                  const guess =
+                    rowIndex < guesses.length
+                      ? guesses[rowIndex]
+                      : rowIndex === currentRow
+                      ? currentGuess
+                      : '';
 
                   return (
                     <div key={rowIndex} className="flex justify-center gap-2 sm:gap-3">
                       {Array.from({ length: word.length }).map((_, colIndex) => {
                         const letter = guess[colIndex] || '';
-                        const color = guess
-                          ? getColor(letter, colIndex)
-                          : 'bg-white/65 border-white/90 text-[#8a651d] shadow-[0_10px_20px_rgba(190,143,72,0.12)]';
+                        const isSubmittedRow = rowIndex < guesses.length;
+                        const isLockedLetter = rowIndex === currentRow && colIndex in lockedLetters;
 
+                        const color = isSubmittedRow
+                        ? getColor(colIndex, rowIndex)
+                        : isLockedLetter
+                        ? 'bg-emerald-500/85 border-emerald-300 text-white shadow-[0_0_18px_rgba(16,185,129,0.4)]'
+                        : 'bg-white/65 border-white/90 text-[#8a651d] shadow-[0_10px_20px_rgba(190,143,72,0.12)]';
                         return (
                           <div
                             key={colIndex}
@@ -305,42 +450,25 @@ const DeborahGamePage = () => {
                 })}
               </div>
 
+              {/* break */}
               {status === 'playing' && (
-                <div className="mt-8 w-full max-w-xl">
-                  <label
-                    htmlFor="guess"
-                    className="mb-3 block text-sm font-semibold uppercase tracking-[0.2em] text-[#b58521]"
-                  >
-                    Enter your guess
-                  </label>
-
-                  <div className="flex flex-col gap-3 sm:flex-row">
-                    <input
-                      id="guess"
-                      value={currentGuess}
-                      onChange={(e) =>
-                        setCurrentGuess(
-                          e.target.value.toLowerCase().slice(0, word.length)
-                        )
-                      }
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleSubmit();
-                        }
-                      }}
-                      maxLength={word.length}
-                      className="h-14 flex-1 rounded-[1.25rem] border border-white/90 bg-white/85 px-5 text-lg font-semibold text-[#5f4511] outline-none transition placeholder:text-[#a9873a] focus:border-[#e3c56e] focus:ring-4 focus:ring-[#f4e4af]/70"
-                      placeholder={`Enter ${word.length}-letter word`}
-                    />
-                    <button
-                      onClick={handleSubmit}
-                      className="h-14 rounded-[1.25rem] border border-[#f3df9a] bg-gradient-to-b from-[#fff2c4] to-[#eac86f] px-8 text-lg font-black text-[#6e4e11] shadow-[0_12px_24px_rgba(190,143,72,0.24)] transition hover:scale-[1.02] hover:from-[#fff6d6] hover:to-[#edcf81] active:scale-[0.98]"
-                    >
-                      Guess
-                    </button>
-                  </div>
-                </div>
+                 <div className="mt-6 flex w-full max-w-md justify-center">
+                        <button
+                        onClick={handleSubmit}
+                        disabled={currentGuess.length !== word.length}
+                        className={`w-full rounded-[1.25rem] border px-6 py-4 text-lg font-black shadow transition
+                            ${
+                            currentGuess.length === word.length
+                                ? 'border-[#f3df9a] bg-gradient-to-b from-[#fff2c4] to-[#eac86f] text-[#6e4e11] hover:scale-[1.02] hover:from-[#fff6d6] hover:to-[#edcf81] active:scale-[0.98]'
+                                : 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400'
+                            }`}
+                        >
+                        Enter
+                        </button>
+                 </div>
               )}
+
+{/* break */}
 
               {status === 'win' && (
                 <div className="mt-8 w-full max-w-xl rounded-[1.75rem] border border-emerald-200 bg-white/65 px-6 py-5 text-center shadow-[0_20px_40px_rgba(16,185,129,0.14)]">
