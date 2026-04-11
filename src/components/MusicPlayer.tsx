@@ -13,18 +13,23 @@ import song9 from '../assets/audio/MorningStrollJoshKirsch.mp3';
 import song10 from '../assets/audio/MorningMoodGrieg.mp3';
 import song11 from '../assets/audio/SneakySnitchKevinMacLeod.mp3';
 
-const PLAYLIST = [song1, song2, song3, song4, song5, song6, song7, song8, song9, song10, song11];
+const PLAYLIST = [song1,song2,song3,song4,song5,song6,song7,song8,song9,song10,song11];
+
 const MUSIC_ENABLED_STORAGE_KEY = 'deborahs-wisdom-music-enabled-v1';
 const MUSIC_TRACK_INDEX_STORAGE_KEY = 'deborahs-wisdom-music-track-index-v1';
+const MUSIC_VOLUME_STORAGE_KEY = 'deborahs-wisdom-music-volume-v1';
 
 const MusicPlayer = () => {
   const [musicEnabled, setMusicEnabled] = useState<boolean>(true);
   const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(0);
+  const [volume, setVolume] = useState<number>(0.03);
+
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     const savedMusicEnabled = localStorage.getItem(MUSIC_ENABLED_STORAGE_KEY);
     const savedTrackIndex = localStorage.getItem(MUSIC_TRACK_INDEX_STORAGE_KEY);
+    const savedVolume = localStorage.getItem(MUSIC_VOLUME_STORAGE_KEY);
 
     if (savedMusicEnabled !== null) {
       setMusicEnabled(savedMusicEnabled === 'true');
@@ -33,8 +38,20 @@ const MusicPlayer = () => {
     if (savedTrackIndex !== null) {
       const parsedIndex = Number(savedTrackIndex);
 
-      if (!Number.isNaN(parsedIndex) && parsedIndex >= 0 && parsedIndex < PLAYLIST.length) {
+      if (
+        !Number.isNaN(parsedIndex) &&
+        parsedIndex >= 0 &&
+        parsedIndex < PLAYLIST.length
+      ) {
         setCurrentTrackIndex(parsedIndex);
+      }
+    }
+
+    if (savedVolume !== null) {
+      const parsedVolume = Number(savedVolume);
+
+      if (!Number.isNaN(parsedVolume) && parsedVolume >= 0 && parsedVolume <= 1) {
+        setVolume(parsedVolume);
       }
     }
   }, []);
@@ -51,19 +68,29 @@ const MusicPlayer = () => {
   }, [currentTrackIndex]);
 
   useEffect(() => {
+    localStorage.setItem(MUSIC_VOLUME_STORAGE_KEY, String(volume));
+  }, [volume]);
+
+  useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
     audio.pause();
     audio.src = PLAYLIST[currentTrackIndex];
     audio.currentTime = 0;
-    audio.volume = 0.03;
+    audio.volume = volume;
 
     if (musicEnabled) {
-      audio.play().catch(() => {
-      });
+      audio.play().catch(() => {});
     }
-  }, [currentTrackIndex, musicEnabled]);
+  }, [currentTrackIndex, musicEnabled, volume]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio.volume = volume;
+  }, [volume]);
 
   const handleSongEnd = () => {
     setCurrentTrackIndex((prevIndex) => (prevIndex + 1) % PLAYLIST.length);
@@ -79,9 +106,7 @@ const MusicPlayer = () => {
     if (!nextValue) {
       audio.pause();
     } else {
-      audio.play().catch(() => {
-        // autoplay may still be blocked
-      });
+      audio.play().catch(() => {});
     }
   };
 
@@ -96,7 +121,7 @@ const MusicPlayer = () => {
   };
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-wrap items-center justify-center gap-3">
       <audio ref={audioRef} onEnded={handleSongEnd} />
 
       <button
@@ -125,6 +150,25 @@ const MusicPlayer = () => {
       >
         ▶
       </button>
+
+      <div className="flex items-center gap-2 rounded-full border border-white/80 bg-white/70 px-4 py-2 shadow">
+        <span className="text-sm font-black text-[#8a651d]">Vol</span>
+
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={volume}
+          onChange={(e) => setVolume(Number(e.target.value))}
+          className="w-28 accent-[#b58521]"
+          aria-label="Music volume"
+        />
+
+        <span className="w-10 text-right text-sm font-black text-[#8a651d]">
+          {Math.round(volume * 100)}
+        </span>
+      </div>
     </div>
   );
 };
