@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://deborahswisdom.netlify.app/sitemap.xml
