@@ -38,6 +38,7 @@ const DeborahGamePage = () => {
   const [verse, setVerse] = useState<Verse | null>(null);
 
   const boardRef = useRef<HTMLDivElement | null>(null);
+  const mobileInputRef = useRef<HTMLInputElement | null>(null);
 
   const generateNewWord = () => {
     const validWords = PLAYABLE_BIBLE_WORDS.filter(
@@ -77,16 +78,23 @@ const DeborahGamePage = () => {
   }, []);
 
   console.log('word:', word);
+
+  const focusGameInput = () => {
+    boardRef.current?.focus();
+    mobileInputRef.current?.focus();
+  };
+
+
   useEffect(() => {
     if (status === 'playing' && !showHowToPlayModal) {
-      boardRef.current?.focus();
+        focusGameInput();
     }
   }, [status, showHowToPlayModal, currentRow]);
 
   const handleCloseHowToPlayModal = () => {
     setShowHowToPlayModal(false);
     localStorage.setItem(HOW_TO_PLAY_STORAGE_KEY, 'true');
-    setTimeout(() => boardRef.current?.focus(), 0);
+    setTimeout(() => focusGameInput(), 0);
   };
 
   const handleOpenHowToPlayModal = () => {
@@ -200,7 +208,7 @@ const DeborahGamePage = () => {
     setLockedLetters({});
     setCurrentRow(0);
     setStatus('playing');
-    setTimeout(() => boardRef.current?.focus(), 0);
+    setTimeout(() => focusGameInput(), 0);
     setStatuses([]);
   };
 
@@ -410,19 +418,34 @@ const DeborahGamePage = () => {
             </div>
 
             <div
-              ref={boardRef}
-              tabIndex={0}
-              onKeyDown={handleBoardKeyDown}
-              className="flex flex-col items-center outline-none"
-            >
+                ref={boardRef}
+                tabIndex={0}
+                onKeyDown={handleBoardKeyDown}
+                onClick={focusGameInput}
+                className="flex flex-col items-center outline-none"
+                >
+                <input
+                    ref={mobileInputRef}
+                    type="text"
+                    inputMode="text"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
+                    value=""
+                    onChange={() => {}}
+                    onKeyDown={(e) => {
+                    handleBoardKeyDown(e as unknown as React.KeyboardEvent<HTMLDivElement>);
+                    }}
+                    className="absolute opacity-0 pointer-events-none h-0 w-0"
+                />
               <div className="space-y-3 pt-2">
                 {Array.from({ length: MAX_GUESSES }).map((_, rowIndex) => {
                   const guess =
                     rowIndex < guesses.length
-                      ? guesses[rowIndex]
+                      ? guesses[rowIndex].split('')
                       : rowIndex === currentRow
                       ? currentGuess
-                      : '';
+                      : Array(word.length).fill('');
 
                   return (
                     <div key={rowIndex} className="flex justify-center gap-2 sm:gap-3">
