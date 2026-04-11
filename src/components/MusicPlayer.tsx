@@ -74,16 +74,22 @@ const MusicPlayer = () => {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-
+  
     audio.pause();
     audio.src = PLAYLIST[currentTrackIndex];
     audio.currentTime = 0;
-    audio.volume = volume;
-
+  
     if (musicEnabled) {
       audio.play().catch(() => {});
     }
-  }, [currentTrackIndex, musicEnabled, volume]);
+  }, [currentTrackIndex, musicEnabled]);
+  
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+  
+    audio.volume = volume;
+  }, [volume]);
 
   useEffect(() => {
     const audio = audioRef.current;
