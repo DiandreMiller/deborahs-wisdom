@@ -44,6 +44,11 @@ const DeborahHomePage = () => {
     setShowDailyVerseModal(false);
   };
 
+  const handleOpenDailyVerseModal = () => {
+    setDailyVerse(getVerseForWord('hope'));
+    setShowDailyVerseModal(true);
+  };
+
   return (
     <>
       <DailyLoginModal />
@@ -117,7 +122,7 @@ const DeborahHomePage = () => {
                 </button>
 
                 <button
-                  onClick={() => navigate('/play')}
+                  onClick={handleOpenDailyVerseModal}
                   className="h-14 rounded-[1.25rem] border border-white/90 bg-white/80 px-8 text-lg font-black text-[#8a651d] shadow-[0_10px_24px_rgba(190,143,72,0.14)] transition hover:scale-[1.02] hover:bg-white active:scale-[0.98]"
                 >
                   Daily Blessing
