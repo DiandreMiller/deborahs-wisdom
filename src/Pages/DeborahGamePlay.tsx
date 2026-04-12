@@ -26,17 +26,23 @@ const defaultStats: GameStats = {
   longestStreak: 0,
 };
 
+type SubmittedRow = {
+  guess: string;
+  result: LetterStatus[];
+};
+
 const DeborahGamePage = () => {
   const [word, setWord] = useState<string>('');
-  const [guesses, setGuesses] = useState<string[]>([]);
+  // const [guesses, setGuesses] = useState<string[]>([]);
   const [currentGuess, setCurrentGuess] = useState<string[]>([]);
   const [currentRow, setCurrentRow] = useState<number>(0);
   const [lockedLetters, setLockedLetters] = useState<Record<number, string>>({});
   const [status, setStatus] = useState<'loading' | 'playing' | 'win' | 'loss'>('loading');
-  const [statuses, setStatuses] = useState<LetterStatus[][]>([]);
+  // const [statuses, setStatuses] = useState<LetterStatus[][]>([]);
   const [showHowToPlayModal, setShowHowToPlayModal] = useState<boolean>(false);
   const [stats, setStats] = useState<GameStats>(defaultStats);
   const [verse, setVerse] = useState<Verse | null>(null);
+  const [submittedRows, setSubmittedRows] = useState<SubmittedRow[]>([]);
 
   const boardRef = useRef<HTMLDivElement | null>(null);
   const mobileInputRef = useRef<HTMLInputElement | null>(null);
@@ -61,7 +67,7 @@ const DeborahGamePage = () => {
     setLockedLetters({});
     setCurrentRow(0);
     setCurrentGuess(Array(generatedWord.length).fill(''));
-    setStatuses([]);
+    setSubmittedRows([]);
 
     const hasDismissedModal = localStorage.getItem(HOW_TO_PLAY_STORAGE_KEY);
     if (!hasDismissedModal) {
@@ -79,6 +85,7 @@ const DeborahGamePage = () => {
   }, []);
 
   console.log('word:', word);
+  
 
   const focusGameInput = () => {
     boardRef.current?.focus();
@@ -102,29 +109,36 @@ const DeborahGamePage = () => {
     setShowHowToPlayModal(true);
   };
 
-  const evaluateGuess = (guess: string): LetterStatus[] => {
+  const getLetterCounts = (word: string) => {
+    const counts: Record<string, number> = {};
+    for (const char of word) {
+      counts[char] = (counts[char] || 0) + 1;
+    }
+    return counts;
+  };
+
+  const evaluateGuess = (guess: string, targetWord: string): LetterStatus[] => {
     const result: LetterStatus[] = Array(guess.length).fill('absent');
-    const wordArr = word.split('');
-    const used = Array(word.length).fill(false);
   
-    // pass 1: exact matches
+    const letterCounts = getLetterCounts(targetWord);
+  
+    // PASS 1: correct letters
     for (let i = 0; i < guess.length; i++) {
-      if (guess[i] === wordArr[i]) {
+      if (guess[i] === targetWord[i]) {
         result[i] = 'correct';
-        used[i] = true;
+        letterCounts[guess[i]]--; // consume it
       }
     }
   
-    // pass 2: present elsewhere
+    // PASS 2: present letters
     for (let i = 0; i < guess.length; i++) {
       if (result[i] === 'correct') continue;
   
-      for (let j = 0; j < wordArr.length; j++) {
-        if (!used[j] && guess[i] === wordArr[j]) {
-          result[i] = 'present';
-          used[j] = true;
-          break;
-        }
+      const letter = guess[i];
+  
+      if (letterCounts[letter] > 0) {
+        result[i] = 'present';
+        letterCounts[letter]--; // consume it
       }
     }
   
@@ -144,11 +158,11 @@ const DeborahGamePage = () => {
       }
     }
 
-    const newGuesses = [...guesses, guess];
-    const result = evaluateGuess(guess);
+    const currentWord = word;
+    const result = evaluateGuess(guess, currentWord);
+    const newSubmittedRows = [...submittedRows, { guess, result }];
 
-    setGuesses(newGuesses);
-    setStatuses((prev) => [...prev, result]);
+    setSubmittedRows(newSubmittedRows);
 
     const newLockedLetters = { ...lockedLetters };
 
@@ -171,11 +185,10 @@ const DeborahGamePage = () => {
       saveStats(updatedStats);
       setVerse(getVerseForWord(word));
       setStatus('win');
-      setCurrentGuess(Array(word.length).fill(''));
       return;
     }
 
-    if (newGuesses.length === MAX_GUESSES) {
+    if (newSubmittedRows.length === MAX_GUESSES) {
       const updatedStats: GameStats = {
         ...stats,
         streak: 0,
@@ -197,20 +210,19 @@ const DeborahGamePage = () => {
     });
 
     setCurrentGuess(nextGuessArray);
-    setCurrentRow(newGuesses.length);
+    setCurrentRow(newSubmittedRows.length);
   };
 
   const handleNewGame = () => {
     const newWord = generateNewWord();
     setWord(newWord);
-    setGuesses([]);
     setCurrentGuess(Array(newWord.length).fill(''));
     setVerse(null);
     setLockedLetters({});
     setCurrentRow(0);
     setStatus('playing');
     setTimeout(() => focusGameInput(), 0);
-    setStatuses([]);
+    setSubmittedRows([]);
   };
 
   const handleBoardKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
@@ -256,23 +268,6 @@ const DeborahGamePage = () => {
     }
   };
 
-  const getColor = (index: number, rowIndex: number) => {
-    const letterStatus = statuses[rowIndex]?.[index];
-  
-    if (letterStatus === 'correct') {
-      return 'bg-emerald-500/85 border-emerald-300 text-white shadow-[0_0_18px_rgba(16,185,129,0.4)]';
-    }
-  
-    if (letterStatus === 'present') {
-      return 'bg-amber-300 border-amber-100 text-[#5c4300] shadow-[0_0_18px_rgba(251,191,36,0.35)]';
-    }
-  
-    if (letterStatus === 'absent') {
-      return 'bg-rose-300/85 border-rose-100 text-[#6b1d1d] shadow-[0_0_18px_rgba(244,114,182,0.25)]';
-    }
-  
-    return 'bg-white/65 border-white/90 text-[#8a651d] shadow-[0_10px_20px_rgba(190,143,72,0.12)]';
-  };
 
   if (status === 'loading') {
     return (
@@ -300,6 +295,7 @@ const DeborahGamePage = () => {
   
     return 'h-12 w-12 text-lg sm:h-14 sm:w-14 sm:text-xl lg:h-16 lg:w-16 lg:text-2xl';
   };
+  
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#fffef8_0%,_#fff7dc_18%,_#f7ebc7_38%,_#ebd5a0_62%,_#d5b06b_82%,_#be8f48_100%)] px-4 py-8 text-[#6f5317] sm:py-10">
@@ -453,25 +449,31 @@ const DeborahGamePage = () => {
                     className="absolute left-0 top-0 opacity-0 w-px h-px"
                     style={{ caretColor: 'transparent' }}
                 />
-              <div className="w-full overflow-x-hidden pt-2">
+              <div className="w-full max-w-md mx-auto overflow-x-hidden pt-2">
                 <div className="space-y-2 sm:space-y-3">
                   {Array.from({ length: MAX_GUESSES }).map((_, rowIndex) => {
-                    const guess =
-                      rowIndex < guesses.length
-                        ? guesses[rowIndex].split('')
-                        : rowIndex === currentRow
-                        ? currentGuess
-                        : Array(word.length).fill('');
+                    const submittedRow = submittedRows[rowIndex];
+                    const isSubmittedRow = !!submittedRow;
+                    const isActiveRow = status === 'playing' && rowIndex === currentRow;
+                    
+                    const guess = isSubmittedRow
+                      ? submittedRow.guess.split('')
+                      : isActiveRow
+                      ? currentGuess
+                      : Array(word.length).fill('');
 
                     return (
                       <div key={rowIndex} className="flex justify-center gap-1.5 sm:gap-2 lg:gap-3">
                         {Array.from({ length: word.length }).map((_, colIndex) => {
                           const letter = guess[colIndex] || '';
-                          const isSubmittedRow = rowIndex < guesses.length;
-                          const isLockedLetter = rowIndex === currentRow && colIndex in lockedLetters;
+                          const isLockedLetter = isActiveRow && colIndex in lockedLetters;
 
                           const color = isSubmittedRow
-                          ? getColor(colIndex, rowIndex)
+                          ? submittedRow.result[colIndex] === 'correct'
+                            ? 'bg-emerald-500/85 border-emerald-300 text-white shadow-[0_0_18px_rgba(16,185,129,0.4)]'
+                            : submittedRow.result[colIndex] === 'present'
+                            ? 'bg-amber-300 border-amber-100 text-[#5c4300] shadow-[0_0_18px_rgba(251,191,36,0.35)]'
+                            : 'bg-rose-300/85 border-rose-100 text-[#6b1d1d] shadow-[0_0_18px_rgba(244,114,182,0.25)]'
                           : isLockedLetter
                           ? 'bg-emerald-500/85 border-emerald-300 text-white shadow-[0_0_18px_rgba(16,185,129,0.4)]'
                           : 'bg-white/65 border-white/90 text-[#8a651d] shadow-[0_10px_20px_rgba(190,143,72,0.12)]';
@@ -494,7 +496,7 @@ const DeborahGamePage = () => {
                  <div className="mt-6 flex w-full max-w-md justify-center">
                         <button
                         onClick={handleSubmit}
-                        disabled={currentGuess.length !== word.length}
+                        disabled={currentGuess.some((letter) => !letter)}
                         className={`w-full rounded-[1.25rem] border px-6 py-4 text-lg font-black shadow transition
                             ${
                             currentGuess.length === word.length
