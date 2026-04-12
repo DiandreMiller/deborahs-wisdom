@@ -22,6 +22,7 @@ const MUSIC_VOLUME_STORAGE_KEY = 'deborahs-wisdom-music-volume-v1';
 const MusicPlayer = () => {
   const [musicEnabled, setMusicEnabled] = useState<boolean>(true);
   const [currentTrackIndex, setCurrentTrackIndex] = useState<number>(0);
+  const [isMobile, setIsMobile] = useState(false);
   const [volume, setVolume] = useState<number>(0.03);
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -83,13 +84,6 @@ const MusicPlayer = () => {
       audio.play().catch(() => {});
     }
   }, [currentTrackIndex, musicEnabled]);
-  
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-  
-    audio.volume = volume;
-  }, [volume]);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -97,6 +91,16 @@ const MusicPlayer = () => {
 
     audio.volume = volume;
   }, [volume]);
+
+  useEffect(() => {
+    const checkIfMobile = () => {
+      setIsMobile(window.innerWidth <640);
+    }
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+
+    return () => window.removeEventListener('resize', checkIfMobile);
+  },[])
 
   const handleSongEnd = () => {
     setCurrentTrackIndex((prevIndex) => (prevIndex + 1) % PLAYLIST.length);
@@ -156,25 +160,26 @@ const MusicPlayer = () => {
       >
         ▶
       </button>
+      {!isMobile && (
+        <div className="flex items-center gap-2 rounded-full border border-white/80 bg-white/70 px-4 py-2 shadow">
+          <span className="text-sm font-black text-[#8a651d]">Vol</span>
 
-      <div className="flex items-center gap-2 rounded-full border border-white/80 bg-white/70 px-4 py-2 shadow">
-        <span className="text-sm font-black text-[#8a651d]">Vol</span>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.01"
+            value={volume}
+            onChange={(e) => setVolume(Number(e.target.value))}
+            className="w-28 accent-[#b58521]"
+            aria-label="Music volume"
+          />
 
-        <input
-          type="range"
-          min="0"
-          max="1"
-          step="0.01"
-          value={volume}
-          onChange={(e) => setVolume(Number(e.target.value))}
-          className="w-28 accent-[#b58521]"
-          aria-label="Music volume"
-        />
-
-        <span className="w-10 text-right text-sm font-black text-[#8a651d]">
-          {Math.round(volume * 100)}
-        </span>
-      </div>
+          <span className="w-10 text-right text-sm font-black text-[#8a651d]">
+            {Math.round(volume * 100)}
+          </span>
+        </div>
+      )}
     </div>
   );
 };
