@@ -4,6 +4,7 @@ import { getVerseForWord, type Verse } from '../utils/getBibleVerse';
 import MusicPlayer from '../components/MusicPlayer';
 import Jesus from '../assets/images/JesusCrown.png';
 import Logo from '../assets/images/Logo.png';
+import DailyLoginStreak from '../components/DailyLoginStreak';
 
 const MAX_GUESSES = 6;
 const HOW_TO_PLAY_STORAGE_KEY = 'deborahs-wisdom-hide-how-to-play-v1';
@@ -378,7 +379,6 @@ const DeborahGamePage = () => {
               Deborah’s Wisdom
             </h1>
           </div>
-
           <button
             onClick={handleOpenHowToPlayModal}
             className="mt-2 flex h-10 w-10 items-center justify-center rounded-full border border-white/80 bg-white/70 text-lg font-black text-[#8a651d]"
@@ -388,7 +388,7 @@ const DeborahGamePage = () => {
             ?
           </button>
         </div>
-
+        <DailyLoginStreak />
         <div className="grid items-start gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-10">
           <div className="rounded-[2.5rem] border border-white/80 bg-white/45 p-6 shadow-[0_24px_80px_rgba(190,143,72,0.3)] backdrop-blur-2xl sm:p-8">
             <div className="mb-5 flex flex-col gap-3">
