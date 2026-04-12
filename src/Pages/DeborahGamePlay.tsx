@@ -33,12 +33,10 @@ type SubmittedRow = {
 
 const DeborahGamePage = () => {
   const [word, setWord] = useState<string>('');
-  // const [guesses, setGuesses] = useState<string[]>([]);
   const [currentGuess, setCurrentGuess] = useState<string[]>([]);
   const [currentRow, setCurrentRow] = useState<number>(0);
   const [lockedLetters, setLockedLetters] = useState<Record<number, string>>({});
   const [status, setStatus] = useState<'loading' | 'playing' | 'win' | 'loss'>('loading');
-  // const [statuses, setStatuses] = useState<LetterStatus[][]>([]);
   const [showHowToPlayModal, setShowHowToPlayModal] = useState<boolean>(false);
   const [stats, setStats] = useState<GameStats>(defaultStats);
   const [verse, setVerse] = useState<Verse | null>(null);
@@ -508,8 +506,6 @@ const DeborahGamePage = () => {
                         </button>
                  </div>
               )}
-
-{/* break */}
 
               {status === 'win' && (
                 <div className="mt-8 w-full max-w-xl rounded-[1.75rem] border border-emerald-200 bg-white/65 px-6 py-5 text-center shadow-[0_20px_40px_rgba(16,185,129,0.14)]">
