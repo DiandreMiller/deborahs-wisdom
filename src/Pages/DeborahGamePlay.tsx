@@ -451,6 +451,7 @@ const DeborahGamePage = () => {
                     handleBoardKeyDown(e as unknown as React.KeyboardEvent<HTMLDivElement>);
                     }}
                     className="absolute left-0 top-0 opacity-0 w-px h-px"
+                    style={{ caretColor: 'transparent' }}
                 />
               <div className="w-full overflow-x-hidden pt-2">
                 <div className="space-y-2 sm:space-y-3">
