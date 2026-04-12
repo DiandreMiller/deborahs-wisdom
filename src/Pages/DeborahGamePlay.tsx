@@ -289,6 +289,18 @@ const DeborahGamePage = () => {
     );
   }
 
+  const getTileSizeClasses = () => {
+    if (word.length >= 8) {
+      return 'h-10 w-10 text-base sm:h-12 sm:w-12 sm:text-lg lg:h-14 lg:w-14 lg:text-xl';
+    }
+  
+    if (word.length === 7) {
+      return 'h-11 w-11 text-lg sm:h-13 sm:w-13 sm:text-lg lg:h-15 lg:w-15 lg:text-xl';
+    }
+  
+    return 'h-12 w-12 text-lg sm:h-14 sm:w-14 sm:text-xl lg:h-16 lg:w-16 lg:text-2xl';
+  };
+
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#fffef8_0%,_#fff7dc_18%,_#f7ebc7_38%,_#ebd5a0_62%,_#d5b06b_82%,_#be8f48_100%)] px-4 py-8 text-[#6f5317] sm:py-10">
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
@@ -369,7 +381,7 @@ const DeborahGamePage = () => {
             />
 
             <h1
-              className="text-center text-5xl tracking-tight sm:text-6xl lg:text-7xl"
+              className="text-center text-4xl tracking-tight sm:text-6xl lg:text-7xl"
               style={{
                 fontFamily: 'Playfair Display, serif',
                 color: '#4a2f05',
@@ -388,9 +400,11 @@ const DeborahGamePage = () => {
             ?
           </button>
         </div>
-        <DailyLoginStreak />
-        <div className="grid items-start gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-10">
-          <div className="rounded-[2.5rem] border border-white/80 bg-white/45 p-6 shadow-[0_24px_80px_rgba(190,143,72,0.3)] backdrop-blur-2xl sm:p-8">
+        <div className="mt-4 grid grid-cols-2 gap-3 sm:mt-5 sm:gap-4">
+          <DailyLoginStreak />
+        </div>
+        <div className="grid items-start gap-5 lg:grid-cols-[1.1fr_0.9fr] lg:gap-10">
+          <div className="rounded-[2rem] border border-white/80 bg-white/45 p-4 shadow-[0_24px_80px_rgba(190,143,72,0.3)] backdrop-blur-2xl sm:rounded-[2.5rem] sm:p-8">
             <div className="mb-5 flex flex-col gap-3">
               <p className="text-xs font-semibold uppercase tracking-[0.35em] text-[#b58521] sm:text-sm">
                 Bible Word Game
@@ -436,43 +450,44 @@ const DeborahGamePage = () => {
                     onKeyDown={(e) => {
                     handleBoardKeyDown(e as unknown as React.KeyboardEvent<HTMLDivElement>);
                     }}
-                    className="absolute opacity-0 pointer-events-none h-0 w-0"
+                    className="absolute left-0 top-0 opacity-0 w-px h-px"
                 />
-              <div className="space-y-3 pt-2">
-                {Array.from({ length: MAX_GUESSES }).map((_, rowIndex) => {
-                  const guess =
-                    rowIndex < guesses.length
-                      ? guesses[rowIndex].split('')
-                      : rowIndex === currentRow
-                      ? currentGuess
-                      : Array(word.length).fill('');
+              <div className="w-full overflow-x-hidden pt-2">
+                <div className="space-y-2 sm:space-y-3">
+                  {Array.from({ length: MAX_GUESSES }).map((_, rowIndex) => {
+                    const guess =
+                      rowIndex < guesses.length
+                        ? guesses[rowIndex].split('')
+                        : rowIndex === currentRow
+                        ? currentGuess
+                        : Array(word.length).fill('');
 
-                  return (
-                    <div key={rowIndex} className="flex justify-center gap-2 sm:gap-3">
-                      {Array.from({ length: word.length }).map((_, colIndex) => {
-                        const letter = guess[colIndex] || '';
-                        const isSubmittedRow = rowIndex < guesses.length;
-                        const isLockedLetter = rowIndex === currentRow && colIndex in lockedLetters;
+                    return (
+                      <div key={rowIndex} className="flex justify-center gap-1.5 sm:gap-2 lg:gap-3">
+                        {Array.from({ length: word.length }).map((_, colIndex) => {
+                          const letter = guess[colIndex] || '';
+                          const isSubmittedRow = rowIndex < guesses.length;
+                          const isLockedLetter = rowIndex === currentRow && colIndex in lockedLetters;
 
-                        const color = isSubmittedRow
-                        ? getColor(colIndex, rowIndex)
-                        : isLockedLetter
-                        ? 'bg-emerald-500/85 border-emerald-300 text-white shadow-[0_0_18px_rgba(16,185,129,0.4)]'
-                        : 'bg-white/65 border-white/90 text-[#8a651d] shadow-[0_10px_20px_rgba(190,143,72,0.12)]';
-                        return (
-                          <div
-                            key={colIndex}
-                            className={`flex h-14 w-14 items-center justify-center rounded-[1rem] border-2 text-xl font-black uppercase transition-all duration-200 sm:h-16 sm:w-16 sm:text-2xl ${color}`}
-                          >
-                            {letter}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
+                          const color = isSubmittedRow
+                          ? getColor(colIndex, rowIndex)
+                          : isLockedLetter
+                          ? 'bg-emerald-500/85 border-emerald-300 text-white shadow-[0_0_18px_rgba(16,185,129,0.4)]'
+                          : 'bg-white/65 border-white/90 text-[#8a651d] shadow-[0_10px_20px_rgba(190,143,72,0.12)]';
+                          return (
+                            <div
+                              key={colIndex}
+                              className={`flex items-center justify-center rounded-[0.9rem] border-2 font-black uppercase transition-all duration-200 ${getTileSizeClasses()} ${color}`}
+                            >
+                              {letter}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-
               {/* break */}
               {status === 'playing' && (
                  <div className="mt-6 flex w-full max-w-md justify-center">
