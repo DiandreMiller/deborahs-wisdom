@@ -45,6 +45,8 @@ const DeborahGamePage = () => {
   const boardRef = useRef<HTMLDivElement | null>(null);
   const mobileInputRef = useRef<HTMLInputElement | null>(null);
 
+  const ogImage = 'https://deborahswisdom.netlify.app/og-image.png'
+
   const generateNewWord = () => {
     const validWords = PLAYABLE_BIBLE_WORDS.filter(
       (playableWord) => playableWord.length >= 4 && playableWord.length <= 8
@@ -296,6 +298,49 @@ const DeborahGamePage = () => {
   
 
   return (
+    <>
+      {/* SEO */}
+      <title>Deborah's Wisdom | Bible Word Game</title>
+      <link 
+        rel="canonical"
+        href="https://deborahswisdom.netlify.app/play"
+      />
+      <meta 
+        name='description'
+        content='Play Deborah’s Wisdom, a Bible-inspired word game where you guess hidden words in six tries. Strengthen your mind and spirit with daily challenges, meaningful scripture, and a unique faith-based twist on classic word puzzles.'
+      />
+      <meta property="og:title" content="Deborah's Wisdom | Bible Word Game" />
+      <meta 
+        property="og:description"
+        content="A Wordle-style Bible game where every win reveals powerful scripture. Test your mind, grow your faith, and build your streak."
+      />
+      <meta property="og:url" content="https://deborahswisdom.netlify.app/play"/>
+      <meta property="og:image" content={ogImage} />
+      <meta property="og:image:alt" content="Deborah's Wisdom Logo" />
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:title" content="Deborah's Wisdom | Bible Word Game" />
+      <meta
+        name="twitter:description"
+        content="A Wordle-style Bible game. Guess the word in six tries and uncover powerful scripture with every win."
+      />
+      <meta name="twitter:image" content={ogImage} />
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': 'WebApplication',
+            name: "Deborah's Wisdom",
+            description:
+              'A Bible-inspired word game where players guess hidden words in six tries and uncover meaningful scripture with every win.',
+            url: 'https://deborahswisdom.netlify.app/play',
+            applicationCategory: 'GameApplication',
+            operatingSystem: 'Any',
+            image: ogImage,
+          }),
+        }}
+      />
     <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#fffef8_0%,_#fff7dc_18%,_#f7ebc7_38%,_#ebd5a0_62%,_#d5b06b_82%,_#be8f48_100%)] px-4 py-8 text-[#6f5317] sm:py-10">
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute left-1/2 top-0 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-white/55 blur-3xl" />
@@ -644,6 +689,7 @@ const DeborahGamePage = () => {
         </div>
       </div>
     </div>
+  </>
   );
 };
 
